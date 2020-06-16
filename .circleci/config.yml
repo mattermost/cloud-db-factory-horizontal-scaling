@@ -84,12 +84,10 @@ workflows:
   ci-build:
     jobs:
     - check-style
-    - test
     - push-docker-pr:
         context: matterbuild-docker
         requires:
         - check-style
-        - test
     - scan-image:
         context: matterbuild-docker
         requires:
@@ -101,16 +99,10 @@ workflows:
           branches:
             only:
             - master
-    - test:
-        filters:
-          branches:
-            only:
-            - master
     - push-docker:
           context: matterbuild-docker
           requires:
           - check-style
-          - test
           filters:
             branches:
               only:
@@ -123,17 +115,10 @@ workflows:
             only: /^v.*/
           branches:
             ignore: /.*/
-    - test:
-        filters:
-          tags:
-            only: /^v.*/
-          branches:
-            ignore: /.*/
     - push-docker:
         context: matterbuild-docker
         requires:
         - check-style
-        - test
         filters:
           tags:
             only: /^v.*/
