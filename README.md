@@ -33,7 +33,7 @@ region = us-east-1
   export MattermostAlertsHook="The mattermost hook to use for alerts"
   export StateStore="The statestore to use for Terraform"
   ```
-  
+
 ### Building
 
 Simply run the following:
@@ -49,5 +49,3 @@ Run the app with:
 ```
 $ /go/bin/database-factory-horizontal-scaling
 ```
-
-where dbfactory is an alias for /go/bin/dbfactory
