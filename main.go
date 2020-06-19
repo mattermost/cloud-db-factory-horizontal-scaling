@@ -287,7 +287,7 @@ func sendMattermostNotification(databaseFactoryRequest DatabaseFactoryRequest, m
 
 	payload := MMSlashResponse{
 		Username:    "Database Factory",
-		IconURL:     "https://cdn2.iconfinder.com/data/icons/amazon-aws-stencils/100/Non-Service_Specific_copy__AWS_Cloud-128.png",
+		IconURL:     "https://img.favpng.com/13/4/25/factory-logo-industry-computer-icons-png-favpng-BTgC49vrFrF2SmJZZywXwfL2s.jpg",
 		Attachments: attachment,
 	}
 	err := send(os.Getenv("MattermostNotificationsHook"), payload)
@@ -310,7 +310,7 @@ func sendMattermostErrorNotification(errorMessage error, message string) error {
 
 	payload := MMSlashResponse{
 		Username:    "Database Factory",
-		IconURL:     "https://cdn2.iconfinder.com/data/icons/amazon-aws-stencils/100/Non-Service_Specific_copy__AWS_Cloud-128.png",
+		IconURL:     "https://img.favpng.com/13/4/25/factory-logo-industry-computer-icons-png-favpng-BTgC49vrFrF2SmJZZywXwfL2s.jpg",
 		Attachments: attachment,
 	}
 	err := send(os.Getenv("MattermostAlertsHook"), payload)
