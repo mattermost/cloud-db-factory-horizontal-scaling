@@ -1,126 +1,26 @@
-version: 2.1
-executors:
-  default:
-    docker:
-    - image: circleci/golang:1.14.1
-
-aliases:
-- &restore_cache
-  restore_cache:
-    key: go-mod-v1-{{ checksum "go.sum" }}
-- &save_cache
-  save_cache:
-    key: go-mod-v1-{{ checksum "go.sum" }}
-    paths:
-      - "/go/pkg/mod"
-
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
 jobs:
-  check-style:
-    executor:
-      name: default
-    steps:
-    - checkout
-    - *restore_cache
-    - run: make check-style
-    - *save_cache
-    
-  push-docker-pr:
-    executor:
-      name: default
-    steps:
-    - checkout
-    - setup_remote_docker
-    - run: make build-image
-    - run: |
-        set -e
-        set -u
-        export TAG="${CIRCLE_SHA1:0:7}"
-        echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-        docker tag mattermost/cloud-db-factory-horizontal-scaling:test mattermost/cloud-db-factory-horizontal-scaling:$TAG
-        docker push mattermost/cloud-db-factory-horizontal-scaling:$TAG
-
-  push-docker:
-    executor:
-      name: default
-    steps:
-    - checkout
-    - setup_remote_docker
-    - run: make build-image
-    - run: |
-        set -e
-        set -u
-        if [[ -z "${CIRCLE_TAG:-}" ]]; then
-          echo "Pushing lastest for $CIRCLE_BRANCH..."
-          TAG=latest
-        else
-          echo "Pushing release $CIRCLE_TAG..."
-          TAG="$CIRCLE_TAG"
-        fi
-        echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
-        docker tag mattermost/cloud-db-factory-horizontal-scaling:test mattermost/cloud-db-factory-horizontal-scaling:$TAG
-        docker push mattermost/cloud-db-factory-horizontal-scaling:$TAG
-
-  scan-image:
+  build:
     docker:
-    - image: registry.gitlab.com/gitlab-org/security-products/analyzers/klar:latest
-      environment:
-        GIT_STRATEGY: none
-        CI_APPLICATION_REPOSITORY: mattermost/cloud-db-factory-horizontal-scaling
-        CLAIR_DB_CONNECTION_STRING: "postgresql://postgres:password@localhost:5432/postgres?sslmode=disable&statement_timeout=60000"
-        DOCKERFILE_PATH: "build/Dockerfile"
-    - image: arminc/clair-db:latest
-    steps:
-    - checkout
-    - run: |
-        export CI_APPLICATION_TAG="${CIRCLE_SHA1:0:7}"
-        export DOCKER_USER=$DOCKER_USERNAME
-        /analyzer run
-    - store_artifacts:
-        path: gl-container-scanning-report.json
-        destination: security-scan
+      # specify the version
+      - image: circleci/golang:1.9
 
-workflows:
-  version: 2
-  ci-build:
-    jobs:
-    - check-style
-    - push-docker-pr:
-        context: matterbuild-docker
-        requires:
-        - check-style
-    - scan-image:
-        context: matterbuild-docker
-        requires:
-        - push-docker-pr
-  master-build:
-    jobs:
-    - check-style:
-        filters:
-          branches:
-            only:
-            - master
-    - push-docker:
-          context: matterbuild-docker
-          requires:
-          - check-style
-          filters:
-            branches:
-              only:
-              - master
-  tag-builds:
-    jobs:
-    - check-style:
-        filters:
-          tags:
-            only: /^v.*/
-          branches:
-            ignore: /.*/
-    - push-docker:
-        context: matterbuild-docker
-        requires:
-        - check-style
-        filters:
-          tags:
-            only: /^v.*/
-          branches:
-            ignore: /.*/
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    #### TEMPLATE_NOTE: go expects specific checkout path representing url
+    #### expecting it in the form of
+    ####   /go/src/github.com/circleci/go-tool
+    ####   /go/src/bitbucket.org/circleci/go-tool
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    steps:
+      - checkout
+
+      # specify any bash command here prefixed with `run: `
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
