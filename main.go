@@ -28,6 +28,9 @@ type DatabaseFactoryRequest struct {
 	InstanceType          string `json:"instanceType"`
 	BackupRetentionPeriod string `json:"backupRetentionPeriod"`
 	ClusterID             string `json:"clusterID"`
+	DBEngine              string `json:"dbEngine"`
+	MaxConnections        string `json:"maxConnections"`
+	Replicas              string `json:"replicas"`
 }
 
 func main() {
@@ -65,6 +68,7 @@ func checkEnvVariables() error {
 		"RDSMultitenantDBClusterNamePrefix",
 		"RDSMultitenantDBClusterTagPurpose",
 		"RDSMultitenantDBClusterTagDatabaseType",
+		"RDSMultitenantDBClusterTagInstallationDatabase",
 		"MaxAllowedInstallations",
 		"Environment",
 		"DBInstanceType",
@@ -162,6 +166,10 @@ func checkDBClustersScaling(vpcList []string) ([]string, error) {
 				{
 					Key:    aws.String("Purpose"),
 					Values: []*string{aws.String(os.Getenv("RDSMultitenantDBClusterTagPurpose"))},
+				},
+				{
+					Key:    aws.String("MattermostCloudInstallationDatabase"),
+					Values: []*string{aws.String(os.Getenv("RDSMultitenantDBClusterTagInstallationDatabase"))},
 				},
 			},
 			ResourceTypeFilters: []*string{aws.String("rds:cluster")},
@@ -281,7 +289,10 @@ func sendMattermostNotification(databaseFactoryRequest DatabaseFactoryRequest, m
 		AddField(MMField{Title: "Apply", Value: strconv.FormatBool(databaseFactoryRequest.Apply), Short: true}).
 		AddField(MMField{Title: "InstanceType", Value: databaseFactoryRequest.InstanceType, Short: true}).
 		AddField(MMField{Title: "BackupRetentionPeriod", Value: databaseFactoryRequest.BackupRetentionPeriod, Short: true}).
-		AddField(MMField{Title: "ClusterID", Value: databaseFactoryRequest.ClusterID, Short: true})
+		AddField(MMField{Title: "ClusterID", Value: databaseFactoryRequest.ClusterID, Short: true}).
+		AddField(MMField{Title: "DBEngine", Value: databaseFactoryRequest.DBEngine, Short: true}).
+		AddField(MMField{Title: "MaxConnections", Value: databaseFactoryRequest.MaxConnections, Short: true}).
+		AddField(MMField{Title: "Replicas", Value: databaseFactoryRequest.Replicas, Short: true})
 
 	attachment = append(attachment, attach)
 
