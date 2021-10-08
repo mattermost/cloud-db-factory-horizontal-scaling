@@ -2,7 +2,7 @@ version: 2.1
 executors:
   default:
     docker:
-    - image: circleci/golang:1.14.1
+    - image: circleci/golang:1.17.0
 
 aliases:
 - &restore_cache
@@ -23,7 +23,7 @@ jobs:
     - *restore_cache
     - run: make check-style
     - *save_cache
-    
+
   push-docker-pr:
     executor:
       name: default
