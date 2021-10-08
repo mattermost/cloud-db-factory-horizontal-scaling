@@ -25,6 +25,7 @@ type DatabaseFactoryRequest struct {
 	Environment           string `json:"environment"`
 	StateStore            string `json:"stateStore"`
 	Apply                 bool   `json:"apply"`
+	DBProxy               bool   `json:"dbProxy"`
 	InstanceType          string `json:"instanceType"`
 	BackupRetentionPeriod string `json:"backupRetentionPeriod"`
 	ClusterID             string `json:"clusterID"`
@@ -73,6 +74,7 @@ func checkEnvVariables() error {
 		"Environment",
 		"DBInstanceType",
 		"TerraformApply",
+		"DBProxy",
 		"BackupRetentionPeriod",
 		"DatabaseFactoryEndpoint",
 		"MattermostNotificationsHook",
@@ -90,6 +92,12 @@ func checkEnvVariables() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to parse bool from TerraformApply string")
 	}
+
+	_, err = strconv.ParseBool(os.Getenv("DBProxy"))
+	if err != nil {
+		return errors.Wrap(err, "failed to parse bool from DBProxy string")
+	}
+
 	_, err = strconv.Atoi(os.Getenv("MaxAllowedInstallations"))
 	if err != nil {
 		return errors.Wrap(err, "failed to parse integer from CounterLimit string")
@@ -198,12 +206,14 @@ func checkDBClustersScaling(vpcList []string) ([]string, error) {
 
 func requestDeployCluster(vpc string) error {
 	applyBool, _ := strconv.ParseBool(os.Getenv("TerraformApply"))
+	dbProxyBool, _ := strconv.ParseBool(os.Getenv("DBProxy"))
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"vpcID":                 vpc,
 		"environment":           os.Getenv("Environment"),
 		"stateStore":            os.Getenv("StateStore"),
 		"apply":                 applyBool,
+		"dbProxy":               dbProxyBool,
 		"instanceType":          os.Getenv("DBInstanceType"),
 		"backupRetentionPeriod": os.Getenv("BackupRetentionPeriod"),
 	})
@@ -287,6 +297,7 @@ func sendMattermostNotification(databaseFactoryRequest DatabaseFactoryRequest, m
 		AddField(MMField{Title: "Environment", Value: databaseFactoryRequest.Environment, Short: true}).
 		AddField(MMField{Title: "StateStore", Value: databaseFactoryRequest.StateStore, Short: true}).
 		AddField(MMField{Title: "Apply", Value: strconv.FormatBool(databaseFactoryRequest.Apply), Short: true}).
+		AddField(MMField{Title: "DBProxy", Value: strconv.FormatBool(databaseFactoryRequest.DBProxy), Short: true}).
 		AddField(MMField{Title: "InstanceType", Value: databaseFactoryRequest.InstanceType, Short: true}).
 		AddField(MMField{Title: "BackupRetentionPeriod", Value: databaseFactoryRequest.BackupRetentionPeriod, Short: true}).
 		AddField(MMField{Title: "ClusterID", Value: databaseFactoryRequest.ClusterID, Short: true}).
